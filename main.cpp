@@ -14,6 +14,9 @@
 #include <string>
 #include <limits>
 #include <filesystem>
+#include <ctime>
+#include <sstream>
+#include <iomanip>
 
 #include "LoadBalancer.h"
 #include "Switch.h"
@@ -84,9 +87,21 @@ int main()
     }
     setBlockedIpPrefix(config.blockedIpPrefix);
 
-    // Ensure logs directory exists, then open log file
+    // Ensure logs directory exists, then open a timestamped log file
     std::filesystem::create_directories("logs");
-    std::ofstream logFile("logs/load_balancer_log.txt");
+    std::time_t now = std::time(nullptr);
+    std::tm localTime{};
+#ifdef _WIN32
+    localtime_s(&localTime, &now);
+#else
+    localtime_r(&now, &localTime);
+#endif
+    std::ostringstream logFileName;
+    logFileName << "logs/load_balancer_log_"
+                << std::put_time(&localTime, "%Y-%m-%d_%H-%M-%S")
+                << ".txt";
+    std::string logFilePath = logFileName.str();
+    std::ofstream logFile(logFilePath);
     bool useFileLog = logFile.is_open();
 
     std::ostream &logStream = useFileLog ? static_cast<std::ostream &>(logFile) : static_cast<std::ostream &>(std::cout);
@@ -128,7 +143,7 @@ int main()
 
     if (useFileLog)
     {
-        std::cout << "Log written to logs/load_balancer_log.txt\n";
+        std::cout << "Log written to " << logFilePath << "\n";
     }
     else
     {

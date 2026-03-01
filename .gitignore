@@ -1,1 +1,4 @@
-echo "README.md" >> .gitignore
+*.o
+load_balancer
+README.md
+logs/
